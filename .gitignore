@@ -1,0 +1,5 @@
+*.exe
+*.so
+*.dylib
+build/
+dist/
