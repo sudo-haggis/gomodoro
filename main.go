@@ -3,12 +3,14 @@
 package main
 
 import (
-	"fmt"  // For string formatting
-	"time" // For time operations and ticker
+	"fmt"     // For string formatting
+	"os/exec" // For running system commands
+	"time"    // For time operations and ticker
 
 	"fyne.io/fyne/v2"           // Base fyne package for types like Size
 	"fyne.io/fyne/v2/app"       // Creates the application
 	"fyne.io/fyne/v2/container" // Layout containers (VBox, HBox, etc)
+	"fyne.io/fyne/v2/dialog"    // For pop-up dialogs
 	"fyne.io/fyne/v2/widget"    // UI widgets (buttons, labels, etc)
 )
 
@@ -22,18 +24,49 @@ const (
 
 // Global variables for timer state
 var (
-	timeRemaining = 25 * 60 // 25 minutes in seconds
+	timeRemaining = 2 * 60 // 25 minutes in seconds
 	currentState  = TimerReady
 	ticker        *time.Ticker // Go's built-in timer that fires every interval
 	timeDisplay   *widget.Label
 	startPauseBtn *widget.Button
 	resetBtn      *widget.Button
+	myWindow      fyne.Window // Need reference for notifications
+	myApp         fyne.App    // Need app reference for thread-safe UI updates
 
 	// Channels for goroutine communication (like ship-to-ship signals!)
 	timerChannel   = make(chan int)    // Sends time updates
 	controlChannel = make(chan string) // Sends control commands
 	stopChannel    = make(chan bool)   // Tells goroutine to stop
 )
+
+// showSystemNotification sends a system notification (Ubuntu/Linux)
+func showSystemNotification(title, message string) {
+	// Use notify-send command on Ubuntu
+	cmd := exec.Command("notify-send", title, message, "-i", "alarm-clock", "-t", "5000")
+	cmd.Run() // Fire and forget - don't block if it fails
+}
+
+// showAnnoyingPopup creates a modal dialog that ye MUST click
+func showAnnoyingPopup(title, message string) {
+	// Create an information dialog
+	dialog.ShowInformation(title, message, myWindow)
+}
+
+// triggerAllAlerts - the full annoying experience!
+func triggerAllAlerts() {
+	// 1. System notification (safe from any thread)
+	showSystemNotification("🏴‍☠️ GoModoro Complete!", "Avast! Yer pomodoro session be finished!")
+
+	// 2. Pop-up dialog (must run on UI thread)
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		showAnnoyingPopup("🍅 Session Complete!",
+			"Ahoy, captain! Yer 25-minute session be done!\n\nTime to take a break and stretch yer sea legs!")
+	}()
+
+	// 3. Request window focus (safe from any thread)
+	myWindow.RequestFocus()
+}
 
 // formatTime converts seconds to MM:SS format
 func formatTime(seconds int) string {
@@ -107,10 +140,12 @@ func timerGoroutine() {
 			if currentState == TimerRunning {
 				timeRemaining--
 				if timeRemaining <= 0 {
-					// Timer finished!
+					// Timer finished - UNLEASH THE KRAKEN OF NOTIFICATIONS!
 					currentState = TimerFinished
 					timeRemaining = 0
 					ticker.Stop()
+					// Fire all the alerts!
+					triggerAllAlerts()
 				}
 				updateUI()
 			}
@@ -126,12 +161,12 @@ func timerGoroutine() {
 }
 
 func main() {
-	// Create the app
-	myApp := app.New()
+	// Create the app - store in global variable
+	myApp = app.New()
 	myApp.SetIcon(nil)
 
-	// Create the main window
-	myWindow := myApp.NewWindow("GoModoro - Pomodoro Timer")
+	// Create the main window - store in global variable for notifications
+	myWindow = myApp.NewWindow("GoModoro - Pomodoro Timer")
 	myWindow.Resize(fyne.NewSize(400, 300))
 
 	// Create UI elements
