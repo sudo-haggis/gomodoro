@@ -18,7 +18,7 @@ const (
 // Global application state
 var (
 	// Timer state
-	timeRemaining = 25 * 60 // 25 minutes in seconds
+	timeRemaining = 30 // 60*25 = minutes in seconds
 	currentState  = TimerReady
 	ticker        *time.Ticker // Go's built-in timer that fires every interval
 

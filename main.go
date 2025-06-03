@@ -10,7 +10,7 @@ import (
 )
 
 // createTimerUI builds the main timer interface
-func createTimerUI() *container.VBox {
+func createTimerUI() *fyne.Container {
 	// Create UI elements
 	title := widget.NewLabel("🍅 GoModoro Timer")
 	title.Alignment = fyne.TextAlignCenter
@@ -38,8 +38,13 @@ func createTimerUI() *container.VBox {
 		controlChannel <- "reset"
 	})
 
+	// Settings button
+	settingsBtn := widget.NewButton("⚙️ Settings", func() {
+		showSettingsWindow()
+	})
+
 	// Layout buttons horizontally
-	buttonContainer := container.NewHBox(startPauseBtn, resetBtn)
+	buttonContainer := container.NewHBox(startPauseBtn, resetBtn, settingsBtn)
 
 	// Main layout - arrange everything vertically
 	content := container.NewVBox(
