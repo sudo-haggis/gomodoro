@@ -11,25 +11,41 @@ import (
 
 // createTimerUI builds the main timer interface
 func createTimerUI() *fyne.Container {
+	// Initialize session manager
+	sessionManager = NewSessionManager()
+	
 	// Create UI elements
 	title := widget.NewLabel("🍅 GoModoro Timer")
 	title.Alignment = fyne.TextAlignCenter
 
+	// Current session label
+	currentSessionLabel = widget.NewLabel("")
+	currentSessionLabel.Alignment = fyne.TextAlignCenter
+	currentSessionLabel.TextStyle = fyne.TextStyle{Bold: true}
+
 	// Big time display
 	timeDisplay = widget.NewLabel(formatTime(timeRemaining))
 	timeDisplay.Alignment = fyne.TextAlignCenter
-	// Make the time display bigger (this is a Fyne-specific way)
 	timeDisplay.TextStyle = fyne.TextStyle{Bold: true}
 
-	// Start/Pause button - uses anonymous function (closure)
+	// Session progress display - smaller text
+	completedLabel = widget.NewLabel("Previous:")
+	completedList = widget.NewLabel("")
+	// Note: Fyne doesn't support direct color styling in labels
+	// We'll use RichText widgets for colored text in production
+	
+	remainingLabel = widget.NewLabel("Upcoming:")
+	remainingList = widget.NewLabel("")
+
+	// Start/Pause button
 	startPauseBtn = widget.NewButton("🏴‍☠️ Start Timer!", func() {
 		switch currentState {
 		case TimerReady, TimerPaused:
-			controlChannel <- "start" // Send command to goroutine
+			controlChannel <- "start"
 		case TimerRunning:
 			controlChannel <- "pause"
 		case TimerFinished:
-			controlChannel <- "reset" // Start new session
+			controlChannel <- "next"
 		}
 	})
 
@@ -38,24 +54,44 @@ func createTimerUI() *fyne.Container {
 		controlChannel <- "reset"
 	})
 
+	// Skip button
+	skipBtn = widget.NewButton("Skip →", func() {
+		controlChannel <- "skip"
+	})
+
 	// Settings button
-	settingsBtn := widget.NewButton("⚙️ Settings", func() {
+	settingsBtn := widget.NewButton("⚙️", func() {
 		showSettingsWindow()
 	})
 
-	// Layout buttons horizontally
-	buttonContainer := container.NewHBox(startPauseBtn, resetBtn, settingsBtn)
+	// Layout buttons more compactly
+	mainButtonContainer := container.NewHBox(startPauseBtn)
+	secondaryButtonContainer := container.NewHBox(resetBtn, skipBtn, settingsBtn)
 
-	// Main layout - arrange everything vertically
-	content := container.NewVBox(
-		widget.NewLabel(""), // Spacer
-		title,
-		widget.NewLabel(""), // Spacer
-		timeDisplay,
-		widget.NewLabel(""), // Spacer
-		buttonContainer,
-		widget.NewLabel(""), // Spacer
+	// Compact session lists
+	sessionProgress := container.NewVBox(
+		completedLabel,
+		completedList,
+		widget.NewSeparator(),
+		remainingLabel,
+		remainingList,
 	)
+
+	// Main layout - more compact
+	content := container.NewVBox(
+		title,
+		currentSessionLabel,
+		widget.NewLabel(""), // Small spacer
+		timeDisplay,
+		widget.NewLabel(""), // Small spacer
+		mainButtonContainer,
+		secondaryButtonContainer,
+		widget.NewLabel(""), // Small spacer
+		sessionProgress,
+	)
+
+	// Update the display
+	updateSessionDisplay()
 
 	return content
 }
@@ -67,7 +103,7 @@ func main() {
 
 	// Create the main window - store in global variable for notifications
 	myWindow = myApp.NewWindow("GoModoro - Pomodoro Timer")
-	myWindow.Resize(fyne.NewSize(400, 300))
+	myWindow.Resize(fyne.NewSize(400, 500)) // Smaller height
 
 	// Create and set the main UI
 	content := createTimerUI()

@@ -14,24 +14,7 @@ func formatTime(seconds int) string {
 
 // updateUI changes the display based on current timer state
 func updateUI() {
-	timeDisplay.SetText(formatTime(timeRemaining))
-
-	// Change button text based on state
-	switch currentState {
-	case TimerReady:
-		startPauseBtn.SetText("🏴‍☠️ Start Timer!")
-		resetBtn.SetText("Reset")
-	case TimerRunning:
-		startPauseBtn.SetText("⏸️ Pause")
-		resetBtn.SetText("Reset")
-	case TimerPaused:
-		startPauseBtn.SetText("▶️ Resume")
-		resetBtn.SetText("Reset")
-	case TimerFinished:
-		startPauseBtn.SetText("🎉 Session Complete!")
-		resetBtn.SetText("New Session")
-		timeDisplay.SetText("00:00 - Ahoy! Well done!")
-	}
+	updateUIWithSession()
 }
 
 // startTimer begins a new timer session
@@ -55,14 +38,58 @@ func pauseTimer() {
 	}
 }
 
-// resetTimer resets to a fresh 25-minute session
+// resetTimer resets the current session
 func resetTimer() {
 	currentState = TimerReady
-	timeRemaining = 25 * 60 // Reset to 25 minutes
+	if current := sessionManager.GetCurrentSession(); current != nil {
+		timeRemaining = current.Duration
+	} else {
+		timeRemaining = 25 * 60 // Default fallback
+	}
+	// Safely stop ticker if it exists
 	if ticker != nil {
 		ticker.Stop()
+		ticker = nil
 	}
 	updateUI()
+}
+
+// nextSession moves to the next session in the list
+func nextSession() {
+	if sessionManager.NextSession() {
+		currentState = TimerReady
+		if current := sessionManager.GetCurrentSession(); current != nil {
+			timeRemaining = current.Duration
+		}
+		updateUI()
+	} else {
+		// All sessions complete - start new cycle
+		sessionManager = NewSessionManager()
+		currentState = TimerReady
+		if current := sessionManager.GetCurrentSession(); current != nil {
+			timeRemaining = current.Duration
+		}
+		updateUI()
+	}
+}
+
+// skipSession skips the current session
+func skipSession() {
+	if sessionManager.SkipCurrentSession() {
+		currentState = TimerReady
+		if current := sessionManager.GetCurrentSession(); current != nil {
+			timeRemaining = current.Duration
+		}
+		updateUI()
+	} else {
+		// No more sessions - start new cycle
+		sessionManager = NewSessionManager()
+		currentState = TimerReady
+		if current := sessionManager.GetCurrentSession(); current != nil {
+			timeRemaining = current.Duration
+		}
+		updateUI()
+	}
 }
 
 // timerGoroutine runs in the background and handles the countdown
@@ -79,6 +106,10 @@ func timerGoroutine() {
 				pauseTimer()
 			case "reset":
 				resetTimer()
+			case "next":
+				nextSession()
+			case "skip":
+				skipSession()
 			}
 
 		// Listen for ticker events (every second when running)
