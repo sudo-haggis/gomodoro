@@ -3,6 +3,10 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"fyne.io/fyne/v2"           // Base fyne package for types like Size
 	"fyne.io/fyne/v2/app"       // Creates the application
 	"fyne.io/fyne/v2/container" // Layout containers (VBox, HBox, etc)
@@ -13,7 +17,7 @@ import (
 func createTimerUI() *fyne.Container {
 	// Initialize session manager
 	sessionManager = NewSessionManager()
-	
+
 	// Create UI elements
 	title := widget.NewLabel("🍅 GoModoro Timer")
 	title.Alignment = fyne.TextAlignCenter
@@ -33,7 +37,7 @@ func createTimerUI() *fyne.Container {
 	completedList = widget.NewLabel("")
 	// Note: Fyne doesn't support direct color styling in labels
 	// We'll use RichText widgets for colored text in production
-	
+
 	remainingLabel = widget.NewLabel("Upcoming:")
 	remainingList = widget.NewLabel("")
 
@@ -101,6 +105,16 @@ func main() {
 	myApp = app.New()
 	myApp.SetIcon(nil)
 
+	// Try to load previous state first
+	if err := loadAppState(); err != nil {
+		// If loading fails, start fresh but don't crash
+		sessionManager = NewSessionManager()
+		currentState = TimerReady
+		if current := sessionManager.GetCurrentSession(); current != nil {
+			timeRemaining = current.Duration
+		}
+	}
+
 	// Create the main window - store in global variable for notifications
 	myWindow = myApp.NewWindow("GoModoro - Pomodoro Timer")
 	myWindow.Resize(fyne.NewSize(400, 500)) // Smaller height
@@ -110,11 +124,28 @@ func main() {
 	myWindow.SetContent(content)
 	myWindow.CenterOnScreen()
 
+	// Set up signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		// Save state before exiting
+		saveAppState()
+		stopChannel <- true
+		myApp.Quit()
+	}()
+
 	// Start the timer goroutine BEFORE showing the window
 	go timerGoroutine()
 
+	// Start auto-save goroutine
+	go autoSaveState()
+
 	// Handle window closing - send stop signal to goroutine
 	myWindow.SetCloseIntercept(func() {
+		// Save state on window close
+		saveAppState()
 		stopChannel <- true
 		myApp.Quit()
 	})
@@ -122,3 +153,4 @@ func main() {
 	// Show the window and run (this blocks until window closes)
 	myWindow.ShowAndRun()
 }
+

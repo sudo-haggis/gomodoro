@@ -1,0 +1,18 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=GoModoro
+GenericName=Pomodoro Timer
+Comment=A pirate's Pomodoro timer built with Go and Fyne
+Exec=/usr/local/bin/gomodoro
+Icon=gomodoro
+Terminal=false
+Categories=Utility;Office;ProjectManagement;
+Keywords=pomodoro;timer;productivity;focus;work;break;
+StartupNotify=true
+StartupWMClass=GoModoro
+MimeType=application/x-gomodoro-session;
+
+# Additional metadata
+X-GNOME-UsesNotifications=true
+X-Ubuntu-Touch=true
