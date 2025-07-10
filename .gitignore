@@ -12,6 +12,7 @@
 # Your specific GoModoro binaries
 gomodoro
 GoModoro
+install
 main
 
 # Build directories
