@@ -1,0 +1,35 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#FF4444" stroke="#CC0000" stroke-width="4"/>
+  
+  <!-- Tomato highlight -->
+  <ellipse cx="50" cy="45" rx="12" ry="8" fill="#FF6666" opacity="0.8"/>
+  
+  <!-- Tomato stem -->
+  <path d="M64 20 Q58 15 52 18 Q48 12 44 16 Q50 8 56 12 Q62 8 68 12 Q74 8 80 16 Q76 12 72 18 Q66 15 64 20 Z" fill="#228B22"/>
+  
+  <!-- Pirate hat -->
+  <path d="M30 35 Q64 25 98 35 Q95 45 64 40 Q33 45 30 35 Z" fill="#1a1a1a"/>
+  <circle cx="85" cy="35" r="3" fill="#FFD700"/>
+  
+  <!-- Skull and crossbones on hat -->
+  <circle cx="64" cy="35" r="4" fill="white"/>
+  <circle cx="61" cy="33" r="1" fill="black"/>
+  <circle cx="67" cy="33" r="1" fill="black"/>
+  <path d="M59 40 L69 40 M55 38 L73 38" stroke="white" stroke-width="1.5"/>
+  
+  <!-- Timer segments -->
+  <circle cx="64" cy="64" r="45" fill="none" stroke="#FFD700" stroke-width="6" stroke-dasharray="15 10" opacity="0.9"/>
+  
+  <!-- Clock hands -->
+  <line x1="64" y1="64" x2="64" y2="35" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+  <line x1="64" y1="64" x2="85" y2="64" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Center dot -->
+  <circle cx="64" cy="64" r="4" fill="#1a1a1a"/>
+  
+  <!-- Pirate flag in corner -->
+  <rect x="95" y="95" width="25" height="15" fill="#1a1a1a"/>
+  <path d="M97 97 L118 102 L97 107 Z" fill="#1a1a1a"/>
+  <text x="105" y="105" font-family="serif" font-size="8" fill="white">🏴‍☠️</text>
+</svg>
