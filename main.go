@@ -153,4 +153,3 @@ func main() {
 	// Show the window and run (this blocks until window closes)
 	myWindow.ShowAndRun()
 }
-
